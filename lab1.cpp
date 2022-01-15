@@ -271,7 +271,7 @@ QPoint Lab1::find_center(const QVector<QPoint> &points){
     return center;
 }
 
-QVector<QPair<QPoint, QPoint>> Lab1::cyrus_beck(QPair<QPoint, QPoint> line, const some_points &shape) {
+QVector<QPair<QPoint, QPoint>> Lab1::cyrus_beck(const QPair<QPoint, QPoint> &line, const some_points &shape) {
     auto d = line.first - line.second;
     QVector<QPoint> normals;
     auto shapePoints = shape.points;
@@ -484,7 +484,7 @@ void Lab1::some_points::sort_poits_clock(){
     std::sort(points.begin(), points.end(), std::bind(Lab1::some_points::compare_points_of_center, std::placeholders::_1, std::placeholders::_2, find_center(points)));
 }
 
-void Lab1::some_points::paint(QPainter &Painter, QColor collor){
+void Lab1::some_points::paint(QPainter &Painter, const QColor &collor){
     Painter.setPen(QPen(collor, 1, Qt::SolidLine, Qt::FlatCap));
     Painter.setBrush(QBrush(collor, Qt::SolidPattern));
     for (auto i = 0; i < points.length() - 1; i++) {

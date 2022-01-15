@@ -38,9 +38,7 @@ private slots:
     void on_pushButton_2_clicked();
     void on_pushButton_3_clicked();
     void on_pushButton_4_clicked();
-
     void on_pushButton_5_clicked();
-
     void on_checkBox_stateChanged(int arg1);
 
 private:
@@ -51,7 +49,7 @@ private:
         bool check_point(const QPoint &point) const;
         static bool compare_points_of_center(const QPoint &p1, const QPoint &p2, const QPoint &center);
         void sort_poits_clock();
-        void paint(QPainter &Painter, QColor collor);
+        void paint(QPainter &Painter,const QColor &collor);
     };
     class figure{
     public:
@@ -80,7 +78,7 @@ private:
     static qreal D_b_points(const QPoint& p1, const QPoint& p2);
     static bool check_point_inside(const QVector<QPoint> &points, const QPoint &point);
     static QPoint find_center(const QVector<QPoint> &points);
-    static QVector<QPair<QPoint, QPoint>> cyrus_beck(QPair<QPoint, QPoint> line, const some_points &shape);
+    static QVector<QPair<QPoint, QPoint>> cyrus_beck(const QPair<QPoint, QPoint> &line, const some_points &shape);
     QVector<figure> figures;
     enum mode{
         add,
