@@ -64,9 +64,9 @@ void Lab1::mousePressEvent(QMouseEvent *event)
             for (auto &i: figures) {
                 if (i.check_point(event->pos()))
                 {
-                    is_moving = true;
-                    moving_start_point = event->pos();
-                    moving_figure = &i;
+                    is_progress = true;
+                    progress_start_point = event->pos();
+                    progress_figure = &i;
                     break;
                 }
             }
@@ -83,9 +83,9 @@ void Lab1::mousePressEvent(QMouseEvent *event)
             for (auto &i: figures) {
                 if (i.check_point(event->pos()))
                 {
-                    is_rotating = true;
-                    rotating_start_point = event->pos();
-                    rotating_figure = &i;
+                    is_progress = true;
+                    progress_start_point = event->pos();
+                    progress_figure = &i;
                     break;
                 }
             }
@@ -102,9 +102,9 @@ void Lab1::mousePressEvent(QMouseEvent *event)
             for (auto &i: figures) {
                 if (i.check_point(event->pos()))
                 {
-                    is_scaling = true;
-                    scaling_start_point = event->pos();
-                    scaling_figure = &i;
+                    is_progress = true;
+                    progress_start_point = event->pos();
+                    progress_figure = &i;
                     break;
                 }
             }
@@ -144,23 +144,23 @@ void Lab1::mouseMoveEvent(QMouseEvent *event)
 {
     switch (current_mode) {
     case move:
-        if ((event->buttons() & Qt::LeftButton) && is_moving){
-           moving_figure->move(event->pos().x()-moving_start_point.x(), event->pos().y()-moving_start_point.y());
-           moving_start_point = event->pos();
+        if ((event->buttons() & Qt::LeftButton) && is_progress){
+           progress_figure->move(event->pos().x()-progress_start_point.x(), event->pos().y()-progress_start_point.y());
+           progress_start_point = event->pos();
         }
         break;
 
     case rotate:
-        if ((event->buttons() & Qt::LeftButton) && is_rotating){
-            rotating_figure->set_angle(rotate_angle(rotating_start_point, rotating_figure->get_center(), event->pos()));
-            rotating_figure->move(0, 0);
+        if ((event->buttons() & Qt::LeftButton) && is_progress){
+            progress_figure->set_angle(rotate_angle(progress_start_point, progress_figure->get_center(), event->pos()));
+            progress_figure->move(0, 0);
         }
         break;
 
     case scale:
-        if ((event->buttons() & Qt::LeftButton) && is_scaling){
-            scaling_figure->set_scale(D_b_points(event->pos(), scaling_figure->get_center()) / D_b_points(scaling_start_point, scaling_figure->get_center()));
-            scaling_figure->move(0, 0);
+        if ((event->buttons() & Qt::LeftButton) && is_progress){
+            progress_figure->set_scale(D_b_points(event->pos(), progress_figure->get_center()) / D_b_points(progress_start_point, progress_figure->get_center()));
+            progress_figure->move(0, 0);
         }
         break;
 
@@ -176,10 +176,10 @@ void Lab1::mouseReleaseEvent(QMouseEvent *event)
     case move:
         switch (event->button()) {
         case Qt::LeftButton:
-            if (is_moving){
-               moving_figure->move(event->pos().x()-moving_start_point.x(), event->pos().y()-moving_start_point.y());
-               moving_start_point = event->pos();
-               is_moving = false;
+            if (is_progress){
+               progress_figure->move(event->pos().x()-progress_start_point.x(), event->pos().y()-progress_start_point.y());
+               progress_start_point = event->pos();
+               is_progress = false;
             }
             break;
 
@@ -191,10 +191,10 @@ void Lab1::mouseReleaseEvent(QMouseEvent *event)
     case rotate:
         switch (event->button()) {
         case Qt::LeftButton:
-            if (is_rotating){
-               rotating_figure->set_angle(rotate_angle(rotating_start_point, rotating_figure->get_center(), event->pos()));
-               rotating_figure->move(0, 0);
-               is_rotating = false;
+            if (is_progress){
+               progress_figure->set_angle(rotate_angle(progress_start_point, progress_figure->get_center(), event->pos()));
+               progress_figure->move(0, 0);
+               is_progress = false;
             }
             break;
 
@@ -206,10 +206,10 @@ void Lab1::mouseReleaseEvent(QMouseEvent *event)
     case scale:
         switch (event->button()) {
         case Qt::LeftButton:
-            if (is_scaling){
-                scaling_figure->set_scale(D_b_points(event->pos(), scaling_figure->get_center()) / D_b_points(scaling_start_point, scaling_figure->get_center()));
-                scaling_figure->move(0, 0);
-               is_scaling = false;
+            if (is_progress){
+                progress_figure->set_scale(D_b_points(event->pos(), progress_figure->get_center()) / D_b_points(progress_start_point, progress_figure->get_center()));
+                progress_figure->move(0, 0);
+               is_progress = false;
             }
             break;
 

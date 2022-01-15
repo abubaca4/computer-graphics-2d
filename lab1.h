@@ -90,16 +90,8 @@ private:
     mode current_mode = add;
     figure on_edit;
 
-    bool is_moving = false;
-    QPoint moving_start_point;
-    figure *moving_figure;
-
-    bool is_rotating = false;
-    QPoint rotating_start_point;
-    figure *rotating_figure;
-
-    bool is_scaling = false;
-    QPoint scaling_start_point;
-    figure *scaling_figure;
+    bool is_progress = false;
+    QPoint progress_start_point;
+    figure *progress_figure;
 };
 #endif // LAB1_H
