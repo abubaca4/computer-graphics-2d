@@ -21,8 +21,13 @@ void Lab1::paintEvent(QPaintEvent *event)
     on_edit.paint(painter, triangles);
     for (auto &i: figures)
     {
-        i.paint(painter, triangles);
-        triangles += i.triangulate();
+        if (ui->checkBox->isChecked())
+        {
+            i.paint_triangles(painter);
+        } else{
+            i.paint(painter, triangles);
+            triangles += i.triangulate();
+        }
     } 
 }
 
@@ -108,6 +113,25 @@ void Lab1::mousePressEvent(QMouseEvent *event)
         default:
             break;
         }
+        break;
+
+    case front:
+        switch (event->button()) {
+        case Qt::LeftButton:
+            for (auto i = 1; i < figures.length(); i++) {
+                if (figures[i].check_point(event->pos()))
+                {
+                    auto temp = figures[i];
+                    figures.remove(i);
+                    figures.push_front(temp);
+                }
+            }
+            break;
+
+        default:
+            break;
+        }
+        break;
         break;
 
     default:
@@ -211,6 +235,42 @@ qreal Lab1::D_b_points(const QPoint& p1, const QPoint& p2)
     return qSqrt(qPow(p2.x() - p1.x(), 2) + qPow(p2.y() - p1.y(), 2));
 }
 
+bool Lab1::check_point_inside(const QVector<QPoint> &points, const QPoint &point)
+{
+    bool result = false;
+    for (qsizetype i = 0, j = points.length() - 1; i < points.length(); j = i++){
+        if ( ((points[i].y() <= point.y() && point.y() < points[j].y()) || (points[j].y() <= point.y() && point.y() < points[i].y())) &&
+             (points[j].y() - points[i].y() != 0) &&
+                 (point.x() > ((points[j].x() - points[i].x()) * (point.y() - points[i].y()) / (points[j].y() - points[i].y()) + points[i].x())) )
+                result = !result;
+    }
+    return result;
+}
+
+QPoint Lab1::find_center(const QVector<QPoint> &points){
+    qreal sx, sy, sL;
+    sx = sy = sL = 0;
+    for (qsizetype i = 0; i < points.length() - 1; i++) {
+        const QPoint &p1 = points[i];
+        QPoint p0;
+        if (i == 0)
+        {
+            p0 = points.back();
+        }
+        else{
+            p0 = points[i-1];
+        }
+        qreal L = qSqrt(qPow(p1.x() - p0.x(), 2) + qPow(p1.y() - p0.y(), 2));
+        sx += (p1.x() + p0.x()) / 2.0 * L;
+        sy += (p1.y() + p0.y()) / 2.0 * L;
+        sL += L;
+    }
+    QPoint center;
+    center.rx() = sx / sL;
+    center.ry() = sy / sL;
+    return center;
+}
+
 QVector<QPair<QPoint, QPoint>> Lab1::cyrus_beck(QPair<QPoint, QPoint> line, const some_points &shape) {
     auto d = line.first - line.second;
     QVector<QPoint> normals;
@@ -225,10 +285,10 @@ QVector<QPair<QPoint, QPoint>> Lab1::cyrus_beck(QPair<QPoint, QPoint> line, cons
     double tE = 0;
     double tL = 1;
     for (auto i = 0; i < normals.length(); i++) {
-        auto dot_prod = normals[i].x()*normals[i].y() + d.x()*d.y();
+        auto dot_prod = normals[i].x()*d.x() + normals[i].y()*d.y();
         if (dot_prod != 0){
             auto diff = shapePoints[i] - line.first;
-            auto t = (normals[i].x()*normals[i].y() + diff.x()*diff.y()) / 1.0 * (-1 * dot_prod);
+            auto t = (normals[i].x()*diff.x() + normals[i].y()*diff.y()) / (1.0 * -1 * dot_prod);
             if (dot_prod < 0) tE = qMax(tE, t);
             else tL = qMin(tL, t);
         } else
@@ -285,25 +345,7 @@ const QPoint& Lab1::figure::get_center() const{
 }
 
 void Lab1::figure::renew_center(){
-    qreal sx, sy, sL;
-    sx = sy = sL = 0;
-    for (qsizetype i = 0; i < origin_points.length() - 1; i++) {
-        QPoint &p1 = origin_points[i];
-        QPoint p0;
-        if (i == 0)
-        {
-            p0 = origin_points.back();
-        }
-        else{
-            p0 = origin_points[i-1];
-        }
-        qreal L = qSqrt(qPow(p1.x() - p0.x(), 2) + qPow(p1.y() - p0.y(), 2));
-        sx += (p1.x() + p0.x()) / 2.0 * L;
-        sy += (p1.y() + p0.y()) / 2.0 * L;
-        sL += L;
-    }
-    center.rx() = sx / sL;
-    center.ry() = sy / sL;
+    center = find_center(origin_points);
 }
 
 void Lab1::figure::paint(QPainter &Painter, const QVector<some_points> &triangles) const
@@ -332,6 +374,12 @@ void Lab1::figure::paint(QPainter &Painter, const QVector<some_points> &triangle
     }
 }
 
+void Lab1::figure::paint_triangles(QPainter &Painter){
+    for (auto &i: triangulate()) {
+        i.paint(Painter, collor);
+    }
+}
+
 void Lab1::figure::move(const int &x, const int &y){
     for (auto &i: origin_points)
     {
@@ -348,28 +396,23 @@ void Lab1::figure::move(const int &x, const int &y){
             i.ry() = (i.y() - center.y()) * scale + center.y();
         }
     }
-    if (angle != 0.0)
+
+    if (true || angle != 0.0)
     {
         qreal sin_temp = qSin(angle);
         qreal cos_temp = qCos(angle);
         for (auto &i: points)
         {
-            i.rx() = center.x() + cos_temp * (i.x() - center.x()) - sin_temp * (i.y() - center.y());
-            i.ry() = center.y() + sin_temp * (i.x() - center.x()) + cos_temp * (i.y() - center.y());
+            auto x = cos_temp * (i.x() - center.x()) + sin_temp * (i.y() - center.y()) + center.x();
+            i.ry() = cos_temp * (i.y() - center.y()) - sin_temp * (i.x() - center.x()) + center.y();
+            i.rx() = x;
         }
     }
 }
 
 bool Lab1::figure::check_point(const QPoint &point) const
 {
-    bool result = false;
-    for (qsizetype i = 0, j = points.length() - 1; i < points.length(); j = i++){
-        if ( ((points[i].y() <= point.y() && point.y() < points[j].y()) || (points[j].y() <= point.y() && point.y() < points[i].y())) &&
-             (points[j].y() - points[i].y() != 0) &&
-                 (point.x() > ((points[j].x() - points[i].x()) * (point.y() - points[i].y()) / (points[j].y() - points[i].y()) + points[i].x())) )
-                result = !result;
-    }
-    return result;
+    return check_point_inside(points, point);
 }
 
 qsizetype Lab1::figure::points_count() const
@@ -398,10 +441,13 @@ QVector<Lab1::some_points> Lab1::figure::triangulate() const{
             if (qFabs(angle) >= M_PI) continue;
             Lab1::some_points triangleCandidate;
             triangleCandidate.points = p;
+            auto cont_f = false;
             for (auto l = 0; l < remaining_points.length(); l++) {
                 if (l == i1 || l == i2 || l == i3) continue;
-                if (triangleCandidate.check_point(remaining_points[l])) continue;
+                if (triangleCandidate.check_point(remaining_points[l])) cont_f = true;
             }
+            if (cont_f)
+                continue;
             triangles.append(triangleCandidate);
             remaining_points.remove(i);
             break;
@@ -416,19 +462,35 @@ QVector<Lab1::some_points> Lab1::figure::triangulate() const{
     temp.points = {remaining_points[0], remaining_points[1], remaining_points[2]};
     triangles.append(temp);
 
+    for (auto &i: triangles) {
+        i.sort_poits_clock();
+    }
+
     return triangles;
 }
 
 bool Lab1::some_points::check_point(const QPoint &point) const
 {
-    bool result = false;
-    for (qsizetype i = 0, j = points.length() - 1; i < points.length(); j = i++){
-        if ( ((points[i].y() <= point.y() && point.y() < points[j].y()) || (points[j].y() <= point.y() && point.y() < points[i].y())) &&
-             (points[j].y() - points[i].y() != 0) &&
-                 (point.x() > ((points[j].x() - points[i].x()) * (point.y() - points[i].y()) / (points[j].y() - points[i].y()) + points[i].x())) )
-                result = !result;
+    return check_point_inside(points, point);
+}
+
+bool Lab1::some_points::compare_points_of_center(const QPoint &p1, const QPoint &p2, const QPoint &center){
+    double angle1 = qAtan2(p1.y() - center.y(), p1.x() - center.x());
+    double angle2 = qAtan2(p2.y() - center.y(), p2.x() - center.x());
+    return angle1 < angle2;
+}
+
+void Lab1::some_points::sort_poits_clock(){
+    std::sort(points.begin(), points.end(), std::bind(Lab1::some_points::compare_points_of_center, std::placeholders::_1, std::placeholders::_2, find_center(points)));
+}
+
+void Lab1::some_points::paint(QPainter &Painter, QColor collor){
+    Painter.setPen(QPen(collor, 1, Qt::SolidLine, Qt::FlatCap));
+    Painter.setBrush(QBrush(collor, Qt::SolidPattern));
+    for (auto i = 0; i < points.length() - 1; i++) {
+        Painter.drawLine(points[i], points[i+1]);
     }
-    return result;
+    Painter.drawLine(points.first(), points.back());
 }
 
 void Lab1::on_pushButton_clicked()
@@ -455,6 +517,19 @@ void Lab1::on_pushButton_3_clicked()
 void Lab1::on_pushButton_4_clicked()
 {
     current_mode = scale;
+    repaint();
+}
+
+
+void Lab1::on_pushButton_5_clicked()
+{
+    current_mode = front;
+    repaint();
+}
+
+
+void Lab1::on_checkBox_stateChanged(int arg1)
+{
     repaint();
 }
 
