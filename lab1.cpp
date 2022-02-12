@@ -530,6 +530,7 @@ void Lab1::on_pushButton_5_clicked()
 
 void Lab1::on_checkBox_stateChanged(int arg1)
 {
+    Q_UNUSED(arg1);
     repaint();
 }
 
